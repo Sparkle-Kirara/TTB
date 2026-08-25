@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTB — Tiny Games, Big Brains</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Header -->
+    <header>
+      <div class="brand" onclick="showView('hubView')">
+        <div class="logo-badge">TTB</div>
+        <div>
+          <div class="brand-title">TinyTwist</div>
+          <div class="brand-subtitle">Tiny Games, Big Brains</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-sm" id="soundToggleBtn" onclick="TTBAudio.toggleSound()">
+          🔊 SFX: ON
+        </button>
+        <button class="btn-sm" id="restartGameBtn" style="display:none;" onclick="handleHeaderRestart()">
+          🔄 Restart
+        </button>
+        <button class="btn-sm" id="navBackBtn" style="display:none;" onclick="showView('hubView')">
+          ← Hub
+        </button>
+      </div>
+    </header>
+
+    <!-- VIEW 1: HUB -->
+    <section id="hubView" class="view active">
+      <div class="hero">
+        <h1 class="hero-title">Small games. Clever twists.</h1>
+        <p class="hero-subtitle">Simple concepts infused with memory, reasoning, and arcade action.</p>
+      </div>
+
+      <div class="section-title">Game Collection</div>
+
+      <div class="game-grid">
+        <!-- Game 01: RPS -->
+        <article class="game-card" onclick="startRPSGame()">
+          <div class="card-thumb thumb-rps">
+            <span class="card-tag">✨ AI / Memory</span>
+            <div class="thumb-icons">
+              <span>✊</span><span>✋</span><span>✌️</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Rock Paper Scissors</h2>
+            <p class="card-hook">«Can you understand the AI?»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Level Progression</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Game 02: Snake MVP -->
+        <article class="game-card" onclick="startSnakeGame()">
+          <div class="card-thumb thumb-snake">
+            <span class="card-tag">🐍 MVP / Arcade</span>
+            <div class="thumb-icons">
+              <span>🐍</span><span>🍎</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Snake MVP</h2>
+            <p class="card-hook">«Test your precision & reflexes»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">20×20 Grid • Arcade</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Game 03: Where Is It? -->
+        <article class="game-card" onclick="startWhereIsItGame()">
+          <div class="card-thumb thumb-whereisit">
+            <span class="card-tag">👀 Tracking / Focus</span>
+            <div class="thumb-icons">
+              <span>🥤</span><span>💎</span><span>🥤</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Where Is It?</h2>
+            <p class="card-hook">«Keep your eyes on the hidden object»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Shuffle & Track • Memory</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Game 04: Don't Get Caught -->
+        <article class="game-card" onclick="startDgcGame()">
+          <div class="card-thumb thumb-dgc">
+            <span class="card-tag">🏃 Turn-Based / Interception</span>
+            <div class="thumb-icons">
+              <span>🔵</span><span>⭐</span><span>🔴</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Don't Get Caught</h2>
+            <p class="card-hook">«Reach the goal before the hunter cuts you off»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Level Progression • Strategic AI</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Game 05: Trust Me -->
+        <article class="game-card" onclick="startTtmGame()">
+          <div class="card-thumb thumb-ttm">
+            <span class="card-tag">🎯 Deduction / AI Personality</span>
+            <div class="thumb-icons">
+              <span>🔢</span><span>🤔</span><span>😏</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Trust Me</h2>
+            <p class="card-hook">«Guess the number. The AI is watching how you play.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Level Progression • Sarcastic AI</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- VIEW 2: RPS GAME -->
+    <section id="rpsView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="levelDisplay">Level 0</div>
+        <div class="scores-display">
+          <div class="score-item">You: <span id="playerScoreDisplay">0</span></div>
+          <div class="score-item">AI: <span id="aiScoreDisplay">0</span></div>
+          <div class="score-item" style="color:var(--text-muted);">Round: <span id="roundDisplay">1</span></div>
+        </div>
+      </div>
+
+      <div class="levelup-banner" id="levelUpBanner">
+        🎉 LEVEL UP! Advancing to Level <span id="newLevelNum">1</span>!
+      </div>
+
+      <div class="ai-box">
+        <div class="ai-avatar-tag">
+          <span id="aiTagTitle">🤖 AI</span>
+        </div>
+        <div id="aiReactionDisplay" class="ai-reaction" style="display:none;">
+          "..."
+        </div>
+        <div class="statement-text" id="aiStatementText">
+          "Make your choice."
+        </div>
+      </div>
+
+      <div class="history-section">
+        <div class="history-title">Recent Player History</div>
+        <div class="history-list" id="historyList">
+          <div style="font-size:0.75rem; color:var(--text-muted);">No history yet.</div>
+        </div>
+      </div>
+
+      <div class="result-stage" id="resultStage">
+        <div class="result-badge" id="resultBadge">YOU WIN</div>
+        <div class="matchup-row">
+          <div class="move-box">
+            <div class="icon" id="playerMoveIcon">✊</div>
+            <div class="label">YOU</div>
+          </div>
+          <div style="font-weight:700; color:var(--text-muted);">VS</div>
+          <div class="move-box">
+            <div class="icon" id="aiMoveIcon">✌️</div>
+            <div class="label">AI</div>
+          </div>
+        </div>
+        <div class="explanation-text" id="explanationText">
+          Explanation of statement logic.
+        </div>
+        <button class="next-btn" id="nextRoundBtn" onclick="advanceRound()">Next Round →</button>
+      </div>
+
+      <div id="controlsSection">
+        <div class="controls-title">Make your choice</div>
+        <div class="choices-grid">
+          <button class="choice-btn" onclick="playTurn('rock')">
+            <span class="choice-icon">✊</span>
+            <span class="choice-name">Rock</span>
+          </button>
+          <button class="choice-btn" onclick="playTurn('paper')">
+            <span class="choice-icon">✋</span>
+            <span class="choice-name">Paper</span>
+          </button>
+          <button class="choice-btn" onclick="playTurn('scissors')">
+            <span class="choice-icon">✌️</span>
+            <span class="choice-name">Scissors</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: SNAKE GAME -->
+    <section id="snakeView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="snakeStatusBadge">READY</div>
+        <div class="scores-display">
+          <div class="score-item">Score: <span id="snakeScoreDisplay">0</span></div>
+          <div class="score-item" id="snakeBestScoreItem" style="color:#a5b4fc;">Best: <span id="snakeBestDisplay">0</span></div>
+        </div>
+        <button class="btn-sm" onclick="toggleSnakePause()" id="snakePauseBtn" style="padding: 2px 8px; font-size:0.75rem;">⏸ Pause</button>
+      </div>
+
+      <div class="statement-text" id="snakeAiDialogue" style="display:none; margin-bottom:0.5rem;">"..."</div>
+
+      <div class="snake-board-wrapper" id="snakeBoardContainer">
+        <canvas id="snakeCanvas"></canvas>
+
+        <div class="snake-overlay" id="snakeOverlayReady">
+          <div class="snake-overlay-title">WHO WILL PLAY?</div>
+          <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:0.6rem; width:100%; max-width:220px;">
+            <button class="action-btn-lg" onclick="snakeStartRun('ME')">Me</button>
+            <button class="action-btn-lg" style="background:#f43f5e;" onclick="snakeStartRun('NOT_ME')">Not me</button>
+            <button class="btn-sm" onclick="notToday()">Not today</button>
+          </div>
+        </div>
+
+        <div class="snake-overlay" id="snakeOverlayPaused" style="display:none;">
+          <div class="snake-overlay-title">PAUSED</div>
+          <div class="snake-overlay-subtitle">Game is paused</div>
+          <button class="action-btn-lg" onclick="toggleSnakePause()">RESUME</button>
+        </div>
+
+        <div class="snake-overlay" id="snakeOverlayGameOver" style="display:none;">
+          <div class="snake-overlay-title" style="color:var(--accent-lose);">GAME OVER</div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="snakeFinalScore">0</span>
+              <span class="lbl">Score</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" style="color:#a5b4fc;" id="snakeFinalBest">0</span>
+              <span class="lbl">Best</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.6rem; margin-top:0.4rem;">
+            <button class="action-btn-lg" onclick="snakePlayAgain()">Play Again</button>
+            <button class="btn-sm" onclick="mainMenu()">Main Menu</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 <b>Desktop:</b> Arrows / WASD &bull; <b>Mobile:</b> Swipe on board
+        &bull; <span style="cursor:pointer; text-decoration:underline;" onclick="toggleSnakeAiDebugPanel()">⚙ AI Debug</span>
+      </div>
+
+      <div id="snakeAiDebugPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center;">
+        <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.2rem; width:90%; max-width:320px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+            <strong>AI DEBUG</strong>
+            <span style="cursor:pointer; color:var(--text-muted);" onclick="toggleSnakeAiDebugPanel()">✕</span>
+          </div>
+          <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.8;">
+            Status: <span id="snakeAiDebugStatus" style="color:var(--text);">Idle</span><br>
+            Generation: <span id="snakeAiDebugGeneration" style="color:var(--text);">0</span><br>
+            Games trained: <span id="snakeAiDebugGames" style="color:var(--text);">0</span><br>
+            Best score: <span id="snakeAiDebugBestScore" style="color:var(--text);">0</span><br>
+            Best fitness: <span id="snakeAiDebugBestFitness" style="color:var(--text);">0</span><br>
+            Model version: <span id="snakeAiDebugVersion" style="color:var(--text);">1</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:1rem;">
+            <button class="btn-sm" onclick="debugTrainSnakeAi(100)">Train AI +100 generations</button>
+            <button class="btn-sm" onclick="debugSaveSnakeAiCheckpoint()">Save Checkpoint</button>
+            <button class="btn-sm" style="background:var(--accent-lose);" onclick="debugResetSnakeAi()">Reset AI</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: WHERE IS IT? GAME -->
+    <section id="whereIsItView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="wiiLevelDisplay">Level 0</div>
+        <div class="scores-display">
+          <div class="score-item">Score: <span id="wiiScoreDisplay">0</span></div>
+          <div class="score-item" style="color:#a5b4fc;">Best: <span id="wiiBestDisplay">0</span></div>
+          <div class="score-item" style="color:#f59e0b;">Progress: <span id="wiiProgressDisplay">0/2</span></div>
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="wiiBoardContainer" style="aspect-ratio: 16 / 10; max-width: 580px;">
+        <canvas id="wiiCanvas"></canvas>
+
+        <div class="snake-overlay" id="wiiOverlayReady">
+          <div class="snake-overlay-title">WHERE IS IT?</div>
+          <div class="snake-overlay-subtitle">Watch the object, follow the shuffle, find where it goes!</div>
+          <button class="action-btn-lg" onclick="wiiStartRun()">START ROUND</button>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint" id="wiiInstructionText" style="font-size:1.05rem; font-weight:700; color:var(--text); min-height:1.6rem;">
+        Watch carefully.
+      </div>
+    </section>
+
+    <!-- VIEW 5: DON'T GET CAUGHT GAME -->
+    <section id="dgcView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="dgcLevelDisplay">Level 0</div>
+        <div class="scores-display">
+          <div class="score-item">Turns: <span id="dgcTurnDisplay">0</span></div>
+          <div class="score-item" style="color:#a5b4fc;">Best Level: <span id="dgcBestDisplay">0</span></div>
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="dgcBoardContainer" style="aspect-ratio: 1 / 1; max-width: 480px;">
+        <canvas id="dgcCanvas"></canvas>
+
+        <div class="snake-overlay" id="dgcOverlayReady">
+          <div class="snake-overlay-title">DON'T GET CAUGHT</div>
+          <div class="snake-overlay-subtitle">Reach the ⭐ goal while outsmarting the red hunter!</div>
+          <button class="action-btn-lg" onclick="dgcStartRun()">START GAME</button>
+        </div>
+
+        <div class="snake-overlay" id="dgcOverlayLevelComplete" style="display:none;">
+          <div class="snake-overlay-title" style="color:var(--accent-win);">LEVEL COMPLETE!</div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="dgcCompletedLevel">0</span>
+              <span class="lbl">Completed Level</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" style="color:#a5b4fc;" id="dgcLevelTurns">0</span>
+              <span class="lbl">Turns Used</span>
+            </div>
+          </div>
+          <button class="action-btn-lg" onclick="dgcNextLevelRun()">NEXT LEVEL →</button>
+        </div>
+
+        <div class="snake-overlay" id="dgcOverlayGameOver" style="display:none;">
+          <div class="snake-overlay-title" style="color:var(--accent-lose);">CAUGHT!</div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="dgcFailedLevel">0</span>
+              <span class="lbl">Current Level</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" style="color:#a5b4fc;" id="dgcFinalBest">0</span>
+              <span class="lbl">Highest Level</span>
+            </div>
+          </div>
+          <button class="action-btn-lg" onclick="dgcRetryRun()">RETRY LEVEL</button>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 <b>Desktop:</b> Arrows / WASD &bull; <b>Mobile:</b> Tap adjacent cell or Swipe
+      </div>
+    </section>
+
+    <!-- VIEW 6: TRUST ME GAME -->
+    <section id="ttmView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="ttmLevelDisplay">Level 0</div>
+        <div class="scores-display">
+          <div class="score-item">Attempts Left: <span id="ttmAttemptsDisplay">7</span></div>
+          <div class="score-item" style="color:#a5b4fc;">Best: <span id="ttmBestDisplay">0</span></div>
+        </div>
+      </div>
+
+      <div class="ai-box">
+        <div class="ai-avatar-tag">
+          <span>🤖 AI</span>
+        </div>
+        <div id="ttmHintDisplay" class="ai-reaction" style="display:none;">
+          Higher
+        </div>
+        <div class="statement-text" id="ttmDialogueText">
+          "Pick a number."
+        </div>
+      </div>
+
+      <div class="history-section">
+        <div class="history-title">Your Guesses</div>
+        <div class="history-list" id="ttmHistoryList">
+          <div style="font-size:0.75rem; color:var(--text-muted);">No guesses yet.</div>
+        </div>
+      </div>
+
+      <div class="guess-range-hint" id="ttmRangeHint">Guess a number between 1 and 20</div>
+
+      <div id="ttmControlsSection">
+        <div class="guess-input-row">
+          <input
+            type="number"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            class="guess-input"
+            id="ttmGuessInput"
+            placeholder="?"
+            aria-label="Your guess"
+          />
+          <button class="guess-submit-btn" id="ttmSubmitBtn" onclick="ttmSubmitGuess()">Guess</button>
+        </div>
+        <div class="guess-input-error" id="ttmInputError"></div>
+      </div>
+
+      <div class="snake-board-wrapper" id="ttmOverlayContainer" style="aspect-ratio: auto; min-height: 0; position: relative; overflow: visible; border: none; box-shadow: none; background: none;">
+        <div class="snake-overlay" id="ttmOverlayReady" style="position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <button class="action-btn-lg" onclick="ttmStartRun()">START GAME</button>
+        </div>
+
+        <div class="snake-overlay" id="ttmOverlayWin" style="display:none; position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title" style="color:var(--accent-win);">GUESSED IT!</div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="ttmWinLevel">0</span>
+              <span class="lbl">Level</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" style="color:#a5b4fc;" id="ttmWinGuesses">0</span>
+              <span class="lbl">Guesses Used</span>
+            </div>
+          </div>
+          <button class="action-btn-lg" onclick="ttmNextLevelRun()">NEXT LEVEL →</button>
+        </div>
+
+        <div class="snake-overlay" id="ttmOverlayLose" style="display:none; position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title" style="color:var(--accent-lose);">OUT OF GUESSES</div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="ttmLoseNumber">0</span>
+              <span class="lbl">The Number Was</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" style="color:#a5b4fc;" id="ttmLoseBest">0</span>
+              <span class="lbl">Best Level</span>
+            </div>
+          </div>
+          <button class="action-btn-lg" onclick="ttmRetryRun()">RETRY LEVEL</button>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 Type a number and tap Guess &bull; Watch what the AI says
+      </div>
+    </section>
+
+    <footer>
+      <p>TTB Platform • Tiny Games, Big Brains</p>
+    </footer>
+
+  </div>
+
+  <!-- Shared modules first (games depend on these) -->
+  <script src="js/shared/audio.js"></script>
+  <script src="js/shared/game-manager.js"></script>
+
+  <!-- Generic AI modules (Snake depends on these; no other game does) -->
+  <script src="js/ai/neural-network.js"></script>
+  <script src="js/ai/snake-ai.js"></script>
+  <script src="js/ai/neuroevolution.js"></script>
+  <script src="js/ai/ai-storage.js"></script>
+
+  <!-- Game modules (no cross-game dependencies; order between them is not significant) -->
+  <script src="js/games/rps.js"></script>
+  <script src="js/games/snake.js"></script>
+  <script src="js/games/where-is-it.js"></script>
+  <script src="js/games/dont-get-caught.js"></script>
+  <script src="js/games/trust-me.js"></script>
+
+  <!-- Platform bootstrap last -->
+  <script src="js/main.js"></script>
+</body>
+</html>
