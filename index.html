@@ -131,6 +131,96 @@
             </div>
           </div>
         </article>
+
+        <!-- Game 06: Wake Up -->
+        <article class="game-card" onclick="startWakeUpGame()">
+          <div class="card-thumb thumb-wakeup">
+            <span class="card-tag">🚪 AI Hint / Door Puzzle</span>
+            <div class="thumb-icons">
+              <span>🚪</span><span>💡</span><span>👁️</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Wake Up</h2>
+            <p class="card-hook">«The AI gives you a hint. Pick the right door. Or don't.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">6 Levels • 8 Endings</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Game 07: Don't Blink -->
+        <article class="game-card" onclick="startDontBlinkGame()">
+          <div class="card-thumb thumb-dontblink">
+            <span class="card-tag">👁️ Observation / Reaction</span>
+            <div class="thumb-icons">
+              <span>🔴</span><span>❓</span><span>⚡</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Don't Blink</h2>
+            <p class="card-hook">«Watch closely. Something's about to change.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Score Attack • 3 Lives</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Game 08: Hot or Not -->
+        <article class="game-card" onclick="startHotOrNotGame()">
+          <div class="card-thumb thumb-hotornot">
+            <span class="card-tag">🔥 Prediction / Trust</span>
+            <div class="thumb-icons">
+              <span>🐱</span><span>🤖</span><span>❓</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Hot or Not</h2>
+            <p class="card-hook">«The AI has an opinion. Trust it, or trust yourself.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Score Attack • 3 Lives</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Game 09: Don't Trust the Signal -->
+        <article class="game-card" onclick="startReflexGame()">
+          <div class="card-thumb thumb-reflex">
+            <span class="card-tag">⚡ Reflex / Adaptive AI</span>
+            <div class="thumb-icons">
+              <span>●</span><span>✖</span><span>⚡</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Don't Trust the Signal</h2>
+            <p class="card-hook">«It's learning how you play.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Arcade • Best Score</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Game 10: Run From AI -->
+        <article class="game-card" onclick="startRunnerGame()">
+          <div class="card-thumb thumb-runner">
+            <span class="card-tag">🏃 Endless Runner / Adaptive AI</span>
+            <div class="thumb-icons">
+              <span>🏃</span><span>🚧</span><span>🧠</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Run From AI</h2>
+            <p class="card-hook">«It's learning how you move.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Endless • Best Distance</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -320,6 +410,8 @@
         </div>
       </div>
 
+      <div class="statement-text" id="dgcDialogue" style="display:none; margin-bottom:0.5rem;">"..."</div>
+
       <div class="snake-board-wrapper" id="dgcBoardContainer" style="aspect-ratio: 1 / 1; max-width: 480px;">
         <canvas id="dgcCanvas"></canvas>
 
@@ -453,6 +545,262 @@
       </div>
     </section>
 
+    <!-- VIEW 7: WAKE UP (Game #6) -->
+    <section id="wakeUpView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="wakeUpSceneBadge">???</div>
+      </div>
+
+      <div class="ai-box" id="wakeUpAiBox" style="display:none;">
+        <div class="ai-avatar-tag">
+          <span>👁️ ???</span>
+        </div>
+        <div class="statement-text" id="wakeUpAiText">
+          "..."
+        </div>
+      </div>
+
+      <div class="wakeup-visual-box" id="wakeUpVisualBox" style="display:none;">
+        <pre id="wakeUpVisualArt"></pre>
+      </div>
+
+      <div id="wakeUpSceneBox" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 1rem; min-height: 3rem; font-size: 0.95rem; line-height: 1.6; color: var(--text);">
+        A hallway. Three doors.
+      </div>
+
+      <div id="wakeUpChoicesSection" class="wakeup-doors-grid">
+        <!-- door buttons injected here -->
+      </div>
+
+      <div class="snake-board-wrapper" id="wakeUpOverlayContainer" style="aspect-ratio: auto; min-height: 0; position: relative; overflow: visible; border: none; box-shadow: none; background: none;">
+        <div class="snake-overlay" id="wakeUpOverlayReady" style="position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title">WAKE UP</div>
+          <div class="snake-overlay-subtitle">Doors. Hints. Choose wisely. Or don't.</div>
+          <button class="action-btn-lg" onclick="startWakeUpStory()">BEGIN</button>
+        </div>
+
+        <div class="snake-overlay" id="wakeUpOverlayEnding" style="display:none; position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title" id="wakeUpEndingTitle" style="color: var(--primary);">ENDING</div>
+          <div class="statement-text" id="wakeUpEndingText" style="margin: 0.5rem 0; white-space: pre-line;">"..."</div>
+          <div style="display:flex; gap:0.6rem; margin-top:0.4rem;">
+            <button class="action-btn-lg" onclick="startWakeUpStory()">Play Again</button>
+            <button class="btn-sm" onclick="showView('hubView')">Back to Hub</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 Read the AI's hint, then pick a door. Think before you tap.
+      </div>
+    </section>
+
+    <!-- VIEW 8: DON'T BLINK (Game #7) -->
+    <section id="dontBlinkView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="dontBlinkRoundBadge">Round 1</div>
+        <div style="display:flex; gap:0.6rem; align-items:center;">
+          <span style="font-size:0.85rem; font-weight:700; color:var(--text);">Score: <span id="dontBlinkScore">0</span></span>
+          <span id="dontBlinkLives">❤️❤️❤️</span>
+        </div>
+      </div>
+
+      <div class="ai-box" id="dontBlinkAiBox" style="display:none;">
+        <div class="ai-avatar-tag">
+          <span>👁️ ???</span>
+        </div>
+        <div class="statement-text" id="dontBlinkAiText">
+          "..."
+        </div>
+      </div>
+
+      <div id="dontBlinkPlayArea" style="display:none;">
+        <div class="dontblink-grid" id="dontBlinkGrid">
+          <!-- symbol slots injected here -->
+        </div>
+
+        <div class="dontblink-choices-grid" id="dontBlinkChoices" style="display:none;">
+          <!-- answer buttons injected here -->
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="dontBlinkOverlayContainer" style="aspect-ratio: auto; min-height: 0; position: relative; overflow: visible; border: none; box-shadow: none; background: none;">
+        <div class="snake-overlay" id="dontBlinkOverlayReady" style="position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title">DON'T BLINK</div>
+          <div class="snake-overlay-subtitle">Watch closely. Something's about to change.</div>
+          <button class="action-btn-lg" onclick="startDontBlinkRun()">BEGIN</button>
+        </div>
+
+        <div class="snake-overlay" id="dontBlinkOverlayEnding" style="display:none; position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title" id="dontBlinkEndingTitle" style="color: var(--primary);">GAME OVER</div>
+          <div class="statement-text" id="dontBlinkEndingText" style="margin: 0.5rem 0; white-space: pre-line;">"..."</div>
+          <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted); margin-bottom:0.4rem;" id="dontBlinkFinalScore">Score: 0</div>
+          <div style="display:flex; gap:0.6rem; margin-top:0.4rem;">
+            <button class="action-btn-lg" onclick="startDontBlinkRun()">Play Again</button>
+            <button class="btn-sm" onclick="showView('hubView')">Back to Hub</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 Memorize the symbols, then spot what changed.
+      </div>
+    </section>
+
+    <!-- VIEW 9: HOT OR NOT (Game #8) -->
+    <section id="hotOrNotView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="hotOrNotRoundBadge">Round 1</div>
+        <div style="display:flex; gap:0.6rem; align-items:center;">
+          <span style="font-size:0.85rem; font-weight:700; color:var(--text);">Score: <span id="hotOrNotScore">0</span></span>
+          <span id="hotOrNotLives">❤️❤️❤️</span>
+        </div>
+      </div>
+
+      <div class="ai-box" id="hotOrNotAiBox" style="display:none;">
+        <div class="ai-avatar-tag">
+          <span>👁️ ???</span>
+        </div>
+        <div class="statement-text" id="hotOrNotAiText">
+          "..."
+        </div>
+      </div>
+
+      <div id="hotOrNotPlayArea" style="display:none;">
+        <div class="hotornot-grid" id="hotOrNotGrid">
+          <!-- option cards injected here -->
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="hotOrNotOverlayContainer" style="aspect-ratio: auto; min-height: 0; position: relative; overflow: visible; border: none; box-shadow: none; background: none;">
+        <div class="snake-overlay" id="hotOrNotOverlayReady" style="position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title">HOT OR NOT</div>
+          <div class="snake-overlay-subtitle">The AI has an opinion. Trust it, or don't.</div>
+          <button class="action-btn-lg" onclick="startHotOrNotRun()">BEGIN</button>
+        </div>
+
+        <div class="snake-overlay" id="hotOrNotOverlayEnding" style="display:none; position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title" id="hotOrNotEndingTitle" style="color: var(--primary);">GAME OVER</div>
+          <div class="statement-text" id="hotOrNotEndingText" style="margin: 0.5rem 0; white-space: pre-line;">"..."</div>
+          <div style="font-size:0.85rem; font-weight:700; color:var(--text-muted); margin-bottom:0.4rem;" id="hotOrNotFinalScore">Score: 0</div>
+          <div style="display:flex; gap:0.6rem; margin-top:0.4rem;">
+            <button class="action-btn-lg" onclick="startHotOrNotRun()">Play Again</button>
+            <button class="btn-sm" onclick="showView('hubView')">Back to Hub</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 Pick the option you think has the highest hidden value.
+      </div>
+    </section>
+
+    <!-- VIEW 10: DON'T TRUST THE SIGNAL (Game #9) -->
+    <section id="reflexView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="reflexBestReady">Best: 0</div>
+        <div style="display:flex; gap:0.6rem; align-items:center;">
+          <span style="font-size:0.85rem; font-weight:700; color:var(--text);">Score: <span id="reflexScore">0</span></span>
+          <span id="reflexStreak" style="font-size:0.85rem; font-weight:700; color:var(--text-muted);">🔥 0</span>
+        </div>
+      </div>
+
+      <div class="ai-box" id="reflexAiBox" style="display:none;">
+        <div class="ai-avatar-tag">
+          <span>👁️ ???</span>
+        </div>
+        <div class="statement-text" id="reflexAiText">
+          "..."
+        </div>
+      </div>
+
+      <div id="reflexPlayArea" style="display:none; flex-direction:column;">
+        <div class="reflex-zone idle" id="reflexZone">
+          <div class="reflex-countdown-overlay" id="reflexCountdownOverlay" style="display:none;">
+            <span id="reflexCountdownText">3</span>
+          </div>
+          <div class="reflex-signal-dot" id="reflexSignalDot" style="display:none;">●</div>
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="reflexOverlayContainer" style="aspect-ratio: auto; min-height: 0; position: relative; overflow: visible; border: none; box-shadow: none; background: none;">
+        <div class="snake-overlay" id="reflexOverlayReady" style="position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title">DON'T TRUST THE SIGNAL</div>
+          <div class="snake-overlay-subtitle">Tap the real signal. Ignore the fake one. It's learning.</div>
+          <button class="action-btn-lg" onclick="startReflexRun()">BEGIN</button>
+        </div>
+
+        <div class="snake-overlay" id="reflexOverlayEnding" style="display:none; position: relative; inset: auto; background: none; backdrop-filter: none; padding: 0.5rem 0; animation: none;">
+          <div class="snake-overlay-title" style="color: var(--primary);">GAME OVER</div>
+          <div class="statement-text" id="reflexEndingText" style="margin: 0.5rem 0; white-space: pre-line;">"..."</div>
+          <div class="reflex-stats-row">
+            <div class="reflex-stat-block"><span class="reflex-stat-label">SCORE</span><span class="reflex-stat-value" id="reflexFinalScore">0</span></div>
+            <div class="reflex-stat-block"><span class="reflex-stat-label">BEST</span><span class="reflex-stat-value" id="reflexFinalBest">0</span></div>
+            <div class="reflex-stat-block"><span class="reflex-stat-label">REACTION</span><span class="reflex-stat-value" id="reflexFinalReaction">—</span></div>
+          </div>
+          <div style="display:flex; gap:0.6rem; margin-top:0.6rem;">
+            <button class="action-btn-lg" onclick="startReflexRun()">Play Again</button>
+            <button class="btn-sm" onclick="showView('hubView')">Back to Hub</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 Tap the circle. Don't tap the ✖. Watch for the trick.
+      </div>
+    </section>
+
+    <!-- VIEW 11: RUN FROM AI (Game #10) -->
+    <section id="runnerView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="runnerBestReady">Best: 0m</div>
+        <div class="scores-display">
+          <div class="score-item">Distance: <span id="runnerDistance">0</span>m</div>
+        </div>
+      </div>
+
+      <div class="ai-box" id="runnerAiBox" style="display:none;">
+        <div class="ai-avatar-tag">
+          <span>👁️ ???</span>
+        </div>
+        <div class="statement-text" id="runnerAiText">
+          "..."
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="runnerBoardContainer" style="aspect-ratio: 3 / 4; max-width: 380px;">
+        <canvas id="runnerCanvas"></canvas>
+
+        <div class="snake-overlay" id="runnerOverlayReady">
+          <div class="snake-overlay-title">RUN FROM AI</div>
+          <div class="snake-overlay-subtitle">It's learning how you move. Don't be predictable.</div>
+          <button class="action-btn-lg" onclick="runnerStartRun()">BEGIN</button>
+        </div>
+
+        <div class="snake-overlay" id="runnerOverlayEnding" style="display:none;">
+          <div class="snake-overlay-title" style="color:var(--accent-lose);">GAME OVER</div>
+          <div class="statement-text" id="runnerEndingText" style="margin: 0.5rem 0; white-space: pre-line;">"..."</div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="runnerFinalDistance">0</span>
+              <span class="lbl">Distance (m)</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" style="color:#a5b4fc;" id="runnerFinalBest">0</span>
+              <span class="lbl">Best (m)</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.6rem; margin-top:0.4rem;">
+            <button class="action-btn-lg" onclick="runnerStartRun()">Play Again</button>
+            <button class="btn-sm" onclick="showView('hubView')">Back to Hub</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 <b>Desktop:</b> Arrow keys / A-D &bull; <b>Mobile:</b> Swipe left/right
+      </div>
+    </section>
+
     <footer>
       <p>TTB Platform • Tiny Games, Big Brains</p>
     </footer>
@@ -462,6 +810,21 @@
   <!-- Shared modules first (games depend on these) -->
   <script src="js/shared/audio.js"></script>
   <script src="js/shared/game-manager.js"></script>
+
+  <!-- Shared dialogue utility, then per-game dialogue content -- must load
+       before the game files below, which call Dialogue.pick() and reference
+       each game's *_DIALOGUE pools directly. -->
+  <script src="js/core/dialogue.js"></script>
+  <script src="js/dialogue/rps-dialogue.js"></script>
+  <script src="js/dialogue/snake-dialogue.js"></script>
+  <script src="js/dialogue/game3-dialogue.js"></script>
+  <script src="js/dialogue/game4-dialogue.js"></script>
+  <script src="js/dialogue/game5-dialogue.js"></script>
+  <script src="js/dialogue/wake-up-dialogue.js"></script>
+  <script src="js/dialogue/game7-dialogue.js"></script>
+  <script src="js/dialogue/game8-dialogue.js"></script>
+  <script src="js/dialogue/reflex-dialogue.js"></script>
+  <script src="js/dialogue/runner-dialogue.js"></script>
 
   <!-- Generic AI modules (Snake depends on these; no other game does) -->
   <script src="js/ai/neural-network.js"></script>
@@ -475,6 +838,11 @@
   <script src="js/games/where-is-it.js"></script>
   <script src="js/games/dont-get-caught.js"></script>
   <script src="js/games/trust-me.js"></script>
+  <script src="js/games/wake-up.js"></script>
+  <script src="js/games/dont-blink.js"></script>
+  <script src="js/games/hot-or-not.js"></script>
+  <script src="js/games/reflex.js"></script>
+  <script src="js/games/runner.js"></script>
 
   <!-- Platform bootstrap last -->
   <script src="js/main.js"></script>

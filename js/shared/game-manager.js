@@ -11,6 +11,9 @@
       document.getElementById('restartGameBtn').style.display = isHub ? 'none' : 'flex';
 
       stopAllAnimationLoops();
+      if (typeof clearDontBlinkTimers === 'function') clearDontBlinkTimers();
+      if (typeof clearHotOrNotTimers === 'function') clearHotOrNotTimers();
+      if (typeof clearReflexTimers === 'function') clearReflexTimers();
 
       if (viewId === 'rpsView') {
         currentActiveGame = 'rps';
@@ -25,6 +28,17 @@
         startDgcLoop();
       } else if (viewId === 'ttmView') {
         currentActiveGame = 'ttm';
+      } else if (viewId === 'wakeUpView') {
+        currentActiveGame = 'wakeUp';
+      } else if (viewId === 'dontBlinkView') {
+        currentActiveGame = 'dontBlink';
+      } else if (viewId === 'hotOrNotView') {
+        currentActiveGame = 'hotOrNot';
+      } else if (viewId === 'reflexView') {
+        currentActiveGame = 'reflex';
+      } else if (viewId === 'runnerView') {
+        currentActiveGame = 'runner';
+        startRunnerLoop();
       } else {
         currentActiveGame = null;
       }
@@ -37,6 +51,11 @@
       else if (currentActiveGame === 'whereIsIt') wiiStartRun();
       else if (currentActiveGame === 'dgc') dgcRetryRun();
       else if (currentActiveGame === 'ttm') ttmRetryRun();
+      else if (currentActiveGame === 'wakeUp') startWakeUpStory();
+      else if (currentActiveGame === 'dontBlink') startDontBlinkRun();
+      else if (currentActiveGame === 'hotOrNot') startHotOrNotRun();
+      else if (currentActiveGame === 'reflex') startReflexRun();
+      else if (currentActiveGame === 'runner') runnerStartRun();
     }
 
     function stopAllAnimationLoops() {
@@ -51,6 +70,10 @@
       if (dgcAnimationId) {
         cancelAnimationFrame(dgcAnimationId);
         dgcAnimationId = null;
+      }
+      if (typeof runnerAnimationId !== 'undefined' && runnerAnimationId) {
+        cancelAnimationFrame(runnerAnimationId);
+        runnerAnimationId = null;
       }
     }
 

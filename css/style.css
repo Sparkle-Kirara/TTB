@@ -204,6 +204,11 @@
     .thumb-whereisit { background: linear-gradient(135deg, #431407, #78350f); }
     .thumb-dgc { background: linear-gradient(135deg, #450a0a, #7f1d1d); }
     .thumb-ttm { background: linear-gradient(135deg, #1e1b4b, #4c1d95); }
+    .thumb-wakeup { background: linear-gradient(135deg, #18181b, #3f3f46); }
+    .thumb-dontblink { background: linear-gradient(135deg, #7c2d12, #b91c1c); }
+    .thumb-hotornot { background: linear-gradient(135deg, #78350f, #d97706); }
+    .thumb-reflex { background: linear-gradient(135deg, #0c4a6e, #0ea5e9); }
+    .thumb-runner { background: linear-gradient(135deg, #14532d, #22c55e); }
 
     .thumb-icons {
       font-size: 2.2rem;
@@ -353,6 +358,31 @@
       justify-content: center;
       line-height: 1.4;
       padding: 0 0.5rem;
+    }
+
+    .wakeup-visual-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem 0.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .wakeup-visual-box pre {
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: 0.85rem;
+      line-height: 1.35;
+      color: var(--text-muted);
+      white-space: pre;
+      display: inline-block;
+      text-align: left;
+    }
+
+    @media (max-width: 420px) {
+      .wakeup-visual-box pre {
+        font-size: 0.68rem;
+      }
     }
 
     .history-section {
@@ -742,6 +772,275 @@
     .action-btn-lg:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
+    }
+
+    /* --- GAME 06: "WAKE UP" — DOOR GRID --- */
+    .wakeup-doors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .wakeup-door-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 0.5rem;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .wakeup-door-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .wakeup-door-btn:active {
+      transform: translateY(0);
+    }
+
+    .wakeup-door-emoji {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .wakeup-door-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* --- GAME 07: "DON'T BLINK" — SYMBOL GRID + CHOICES --- */
+    .dontblink-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 0.7rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.6rem 1rem;
+      margin-bottom: 1rem;
+      min-height: 6rem;
+    }
+
+    .dontblink-slot {
+      font-size: 2.2rem;
+      line-height: 1;
+      width: 2.6rem;
+      height: 2.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dontblink-hidden-slot {
+      font-size: 1.6rem;
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    .dontblink-choices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+
+    .dontblink-choice-btn {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.8rem 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      font-family: var(--font);
+      cursor: pointer;
+      text-align: center;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .dontblink-choice-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .dontblink-choice-btn:active {
+      transform: translateY(0);
+    }
+
+    /* --- GAME 08: "HOT OR NOT" — OPTION CARDS --- */
+    .hotornot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.7rem;
+      margin-bottom: 1rem;
+    }
+
+    .hotornot-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem 0.6rem;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .hotornot-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .hotornot-card:active {
+      transform: translateY(0);
+    }
+
+    .hotornot-card.revealed {
+      cursor: default;
+    }
+
+    .hotornot-card.revealed:hover {
+      transform: none;
+    }
+
+    .hotornot-card.picked {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary) inset;
+    }
+
+    .hotornot-emoji {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+
+    .hotornot-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .hotornot-ai-tag {
+      position: absolute;
+      top: 0.4rem;
+      right: 0.5rem;
+      font-size: 0.9rem;
+      opacity: 0.85;
+    }
+
+    .hotornot-value {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-top: 0.1rem;
+    }
+
+    /* --- GAME 09: "DON'T TRUST THE SIGNAL" — REFLEX ZONE --- */
+    .reflex-zone {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-height: 60vh;
+      margin: 0 auto 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+      transition: background 0.12s ease;
+    }
+
+    .reflex-zone.idle {
+      background: var(--surface);
+    }
+
+    .reflex-signal-dot {
+      font-size: 4.5rem;
+      line-height: 1;
+      color: var(--primary);
+      animation: reflexPulse 0.25s ease;
+    }
+
+    .reflex-zone.signal-fake .reflex-signal-dot {
+      color: #ef4444;
+    }
+
+    @keyframes reflexPulse {
+      0% { transform: scale(0.6); opacity: 0; }
+      60% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .reflex-zone.feedback-hit {
+      background: rgba(34, 197, 94, 0.18);
+    }
+
+    .reflex-zone.feedback-miss {
+      background: rgba(239, 68, 68, 0.18);
+    }
+
+    .reflex-countdown-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      z-index: 2;
+    }
+
+    .reflex-stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 1.4rem;
+      margin: 0.6rem 0;
+    }
+
+    .reflex-stat-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+    }
+
+    .reflex-stat-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .reflex-stat-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--text);
     }
 
     .mobile-controls-hint {
