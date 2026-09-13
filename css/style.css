@@ -209,6 +209,9 @@
     .thumb-hotornot { background: linear-gradient(135deg, #78350f, #d97706); }
     .thumb-reflex { background: linear-gradient(135deg, #0c4a6e, #0ea5e9); }
     .thumb-runner { background: linear-gradient(135deg, #14532d, #22c55e); }
+    .thumb-physics { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
+    .thumb-aim { background: linear-gradient(135deg, #7c2d12, #f97316); }
+    .thumb-aim-duel { background: linear-gradient(135deg, #312e81, #6366f1); }
 
     .thumb-icons {
       font-size: 2.2rem;
