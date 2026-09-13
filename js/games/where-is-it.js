@@ -17,7 +17,13 @@
       swapQueue: [],
       currentSwap: null,
       lastResult: null,
-      instructionText: "Watch carefully."
+      instructionText: "Watch carefully.",
+      // --- Behavior tracking for dialogue only (spec PART 8 style, applied
+      // to Game #3) -- none of this affects gameplay, only what the AI says. ---
+      chooseStartTime: 0,      // performance.now() when status became CHOOSE
+      consecutiveWrong: 0,
+      consecutiveCorrect: 0,
+      justRecoveredFromFailure: false // true if this correct guess follows 1+ wrong guesses
     };
 
     let wiiCanvas, wiiCtx;
@@ -69,6 +75,8 @@
       wiiState.score = 0;
       wiiState.progress = 0;
       wiiState.status = 'READY';
+      wiiState.consecutiveWrong = 0;
+      wiiState.consecutiveCorrect = 0;
 
       updateWiiScoresUI();
       document.getElementById('wiiOverlayReady').style.display = 'flex';
@@ -245,6 +253,7 @@
     function processNextSwap() {
       if (wiiState.swapQueue.length === 0) {
         wiiState.status = 'CHOOSE';
+        wiiState.chooseStartTime = performance.now();
         setWiiInstruction("Where is it? Tap a cup.");
         TTBAudio.playHint();
         return;
@@ -305,6 +314,8 @@
     function selectWiiCup(cupId) {
       if (wiiState.status !== 'CHOOSE') return;
 
+      const decisionMs = performance.now() - wiiState.chooseStartTime;
+
       wiiState.status = 'RESULT';
       wiiState.selectedCupId = cupId;
 
@@ -322,20 +333,45 @@
 
         TTBAudio.playWin();
 
+        // Priority: recovery from a wrong-guess streak is the strongest
+        // signal, then decision speed, as a fallback plain correct line.
+        if (wiiState.consecutiveWrong > 0) {
+          setWiiInstruction(Dialogue.pick(GAME3_DIALOGUE.correctAfterFailure, 'wii.correctAfterFailure'));
+        } else if (decisionMs < 900) {
+          setWiiInstruction(Dialogue.pick(GAME3_DIALOGUE.correctFast, 'wii.correctFast'));
+        } else if (decisionMs > 3500) {
+          setWiiInstruction(Dialogue.pick(GAME3_DIALOGUE.correctSlow, 'wii.correctSlow'));
+        } else {
+          setWiiInstruction(Dialogue.pick(GAME3_DIALOGUE.correctNormal, 'wii.correctNormal'));
+        }
+
+        wiiState.consecutiveWrong = 0;
+        wiiState.consecutiveCorrect += 1;
+
         if (wiiState.progress >= 2) {
           wiiState.level += 1;
           wiiState.progress = 0;
-          setWiiInstruction("🎉 Level Up!");
           TTBAudio.playLevelUp();
-        } else {
-          setWiiInstruction("✅ Correct!");
+          // Level-up is the most important thing happening this moment,
+          // so it takes priority over the guess-quality reaction above.
+          setTimeout(() => {
+            if (wiiState.status === 'RESULT') setWiiInstruction(Dialogue.pick(GAME3_DIALOGUE.levelUp, 'wii.levelUp'));
+          }, 700);
         }
 
         saveWiiHighScore();
       } else {
         wiiState.lastResult = 'lose';
         TTBAudio.playLose();
-        setWiiInstruction("❌ Wrong! Here it was.");
+
+        wiiState.consecutiveWrong += 1;
+        wiiState.consecutiveCorrect = 0;
+
+        if (wiiState.consecutiveWrong >= 2) {
+          setWiiInstruction(Dialogue.pick(GAME3_DIALOGUE.repeatedWrong, 'wii.repeatedWrong'));
+        } else {
+          setWiiInstruction(Dialogue.pick(GAME3_DIALOGUE.wrong, 'wii.wrong'));
+        }
       }
 
       updateWiiScoresUI();

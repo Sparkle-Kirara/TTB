@@ -59,6 +59,11 @@
       bestFitness: 0
     };
 
+    // Session-only counters for dialogue purposes (not persisted, not part
+    // of the AI's training checkpoint) -- tracks how many "Not me" runs in
+    // a row have ended in death, purely so the AI can comment on it.
+    let snakeConsecutiveAiDeaths = 0;
+
     // Recorded (state, action, nextState, reward, done) tuples from "Me"
     // runs, per spec PART 12. This is prepared for future AI training but
     // is NOT consumed by any training step yet, and the AI's model is never
@@ -136,11 +141,12 @@
       snakeState.foodEatenAnim = 0;
 
       snakeExperienceBuffer = [];
+      snakeConsecutiveAiDeaths = 0;
 
       const dialogueEl = document.getElementById('snakeAiDialogue');
       if (snakeState.mode === 'NOT_ME') {
         dialogueEl.style.display = 'block';
-        setSnakeAiDialogue(pickSnakeAiYapLine('OPENING'));
+        setSnakeAiDialogue(Dialogue.pick(SNAKE_AI_DIALOGUE.opening, 'snake.opening'));
       } else {
         dialogueEl.style.display = 'none';
       }
@@ -197,7 +203,8 @@
      *   0-29  : NONE
      *   30-39 : WARN_30
      *   40-49 : WARN_40
-     *   50-59 : WARN_50, and within this window a visible 10..1 countdown
+     *   50    : WARN_50 fires once, right as the 10-second countdown begins
+     *   50-59 : COUNTDOWN (10..1)
      *   60+   : Death Zone active
      */
     function updateAppleTimeout(deltaMs) {
@@ -227,21 +234,29 @@
         snakeState.countdownValue = null;
         snakeState.warningStage = 'NONE';
       } else if (t >= W3) {
-        snakeState.warningStage = 'COUNTDOWN';
         const remaining = Math.max(1, Math.min(SNAKE_CONFIG.APPLE_COUNTDOWN_SECONDS, Math.ceil(countdownEnd - t)));
         if (remaining !== snakeState.countdownValue) {
           snakeState.countdownValue = remaining;
-          setSnakeSystemMessage(pickSnakeSystemLine('COUNTDOWN', remaining));
+          if (snakeState.warningStage !== 'COUNTDOWN') {
+            // First tick of the countdown window (remaining === 10): fire
+            // the WARN_50 "final warning" line instead of the "10..." tick,
+            // per spec section 2/3 -- the final warning IS the moment the
+            // countdown begins, not a separate preceding stage.
+            snakeState.warningStage = 'COUNTDOWN';
+            setSnakeSystemMessage(Dialogue.pick(SNAKE_SYSTEM_DIALOGUE.warn50, 'snake.warn50'));
+          } else {
+            setSnakeSystemMessage(pickSnakeCountdownLine(remaining));
+          }
         }
       } else if (t >= W2) {
         if (snakeState.warningStage !== 'WARN_40') {
           snakeState.warningStage = 'WARN_40';
-          setSnakeSystemMessage(pickSnakeSystemLine('WARN_40'));
+          setSnakeSystemMessage(Dialogue.pick(SNAKE_SYSTEM_DIALOGUE.warn40, 'snake.warn40'));
         }
       } else if (t >= W1) {
         if (snakeState.warningStage !== 'WARN_30') {
           snakeState.warningStage = 'WARN_30';
-          setSnakeSystemMessage(pickSnakeSystemLine('WARN_30'));
+          setSnakeSystemMessage(Dialogue.pick(SNAKE_SYSTEM_DIALOGUE.warn30, 'snake.warn30'));
         }
       }
       // else: t < W1 (below 30s) -- stays 'NONE', nothing to trigger yet.
@@ -470,7 +485,20 @@
       document.getElementById('snakeFinalBest').innerText = snakeState.bestScore;
 
       if (snakeState.mode === 'NOT_ME') {
-        setSnakeAiDialogue(pickSnakeAiYapLine('GAME_OVER'));
+        snakeConsecutiveAiDeaths += 1;
+
+        // Priority: repeated failures is the strongest signal (the AI
+        // noticing its own pattern), then score-vs-best commentary, then
+        // the plain game-over reaction as a fallback.
+        if (snakeConsecutiveAiDeaths >= 2) {
+          setSnakeAiDialogue(Dialogue.pick(SNAKE_AI_DIALOGUE.repeatedFailures, 'snake.repeatedFailures'));
+        } else if (snakeState.bestScore > 0 && snakeState.score >= snakeState.bestScore) {
+          setSnakeAiDialogue(Dialogue.pick(SNAKE_AI_DIALOGUE.beatingPlayerBest, 'snake.beatingBest'));
+        } else if (snakeState.bestScore > 0) {
+          setSnakeAiDialogue(Dialogue.pick(SNAKE_AI_DIALOGUE.strugglingVsPlayerBest, 'snake.strugglingBest'));
+        } else {
+          setSnakeAiDialogue(Dialogue.pick(SNAKE_AI_DIALOGUE.gameOver, 'snake.gameOver'));
+        }
       }
 
       showSnakeOverlay('GAME_OVER');
@@ -534,6 +562,14 @@
         snakeState.score += 1;
         snakeState.foodEatenAnim = 10;
         TTBAudio.playFood();
+        snakeConsecutiveAiDeaths = 0; // a successful bite breaks any death streak
+
+        // Detect a near-death escape BEFORE resetAppleTimeout() clears the
+        // relevant state -- eating while the Death Zone was already active,
+        // or very late in the countdown, counts as a close call worth
+        // commenting on.
+        const wasNearDeath = snakeState.deathZoneActive ||
+          (snakeState.warningStage === 'COUNTDOWN' && snakeState.countdownValue !== null && snakeState.countdownValue <= 3);
 
         snakeState.moveInterval = Math.max(
           SNAKE_CONFIG.MIN_INTERVAL,
@@ -547,10 +583,14 @@
 
         // Occasionally yap about how the AI's own run is going (spec PART 13),
         // kept infrequent so it doesn't spam a line every single food eaten.
-        // This runs AFTER resetAppleTimeout() so the milestone line isn't
-        // immediately cleared by the timeout reset.
-        if (snakeState.score % 5 === 0) {
-          setSnakeAiDialogue(pickSnakeAiYapLine('MILESTONE'));
+        // This runs AFTER resetAppleTimeout() so the milestone/near-death
+        // line isn't immediately cleared by the timeout reset. Near-death
+        // takes priority over the plain milestone since it's a stronger,
+        // more specific moment worth reacting to.
+        if (wasNearDeath) {
+          setSnakeAiDialogue(Dialogue.pick(SNAKE_AI_DIALOGUE.nearDeathEscape, 'snake.nearDeath'));
+        } else if (snakeState.score % 5 === 0) {
+          setSnakeAiDialogue(Dialogue.pick(SNAKE_AI_DIALOGUE.milestone, 'snake.milestone'));
         }
       } else {
         snakeState.snake.pop();
@@ -795,47 +835,13 @@
        inside the Neural Network -- it only reacts to match results here.
        ===================================================================== */
 
-    /* --- 13. AI DIALOGUE (yapping while the AI plays solo in "Not me" mode) --- */
-    // Personality lives here, separate from the Neural Network -- the NN
-    // only ever decides movement (encodeSnakeState -> predict -> decodeSnakeAction).
-    const SNAKE_AI_DIALOGUE = {
-      OPENING: [
-        "Watch and learn.",
-        "This is how it's done.",
-        "Let me show you something.",
-        "Front row seat to greatness."
-      ],
-      MILESTONE: [
-        "Easy.",
-        "Was there ever any doubt?",
-        "I could do this all day.",
-        "Getting good at this, huh? Me, I mean.",
-        "Just another day at the office."
-      ],
-      GAME_OVER: [
-        "Okay, that was a mistake.",
-        "...We don't talk about that one.",
-        "Even I have off days.",
-        "That wasn't my best work.",
-        "Rude. The wall moved."
-      ]
-    };
-
-    let snakeAiLastLine = null;
-    function pickSnakeAiYapLine(category) {
-      const pool = SNAKE_AI_DIALOGUE[category];
-      if (!pool || pool.length === 0) return '...';
-
-      let line;
-      let attempts = 0;
-      do {
-        line = pool[Math.floor(Math.random() * pool.length)];
-        attempts++;
-      } while (line === snakeAiLastLine && attempts < 6 && pool.length > 1);
-
-      snakeAiLastLine = line;
-      return line;
-    }
+    /* --- 13. AI DIALOGUE --- */
+    // Personality/content lives in js/dialogue/snake-dialogue.js (SNAKE_AI_DIALOGUE,
+    // SNAKE_SYSTEM_DIALOGUE). Selection goes through the shared Dialogue
+    // utility (js/core/dialogue.js). This section only decides WHICH pool
+    // applies and displays the result -- no line text belongs here.
+    // The Neural Network never sees or influences any of this; it only ever
+    // decides movement (encodeSnakeState -> predict -> decodeSnakeAction).
 
     function setSnakeAiDialogue(line) {
       const el = document.getElementById('snakeAiDialogue');
@@ -843,65 +849,16 @@
       el.innerText = `"${line}"`;
     }
 
-    /* --- Apple Timeout system messages -- separate pool/architecture from
-       AI yapping (spec PART 14), since these fire in BOTH Me and Not me
-       mode, not just when the AI is playing. Shares the same on-screen
-       dialogue box as AI yapping for simplicity (spec: keep the UI simple),
-       but system messages always take priority when both want to display
-       at once, since a danger warning matters more than personality flavor. --- */
-    const SNAKE_SYSTEM_DIALOGUE = {
-      WARN_30: [
-        "Eat the apple.",
-        "The apple is right there.",
-        "You forgot what food is?",
-        "Maybe eat the apple?"
-      ],
-      WARN_40: [
-        "Still not eating?",
-        "It's not going to eat itself.",
-        "Are you planning to starve?"
-      ],
-      WARN_50: [
-        "Okay. Ten seconds.",
-        "Last warning.",
-        "You really want to test this?"
-      ],
-      COUNTDOWN_HIGH: [ // 10-6: mostly just the number
-        "Don't say I didn't warn you."
-      ],
-      COUNTDOWN_LOW: [ // 5-2: a little more pointed
-        "This is your problem now."
-      ]
-    };
-
-    let snakeSystemLastLine = null;
-    function pickSnakeSystemLine(category, countdownNumber) {
-      if (category === 'COUNTDOWN') {
-        // Countdown numbers themselves ARE the message most of the time,
-        // per spec section 14's example ("10...","9...","8..." etc.), with
-        // an occasional flavor line mixed in at specific points.
-        if (countdownNumber === 7) return pickFromPool('COUNTDOWN_HIGH');
-        if (countdownNumber === 4) return pickFromPool('COUNTDOWN_LOW');
-        if (countdownNumber === 1) return "💀";
-        return `${countdownNumber}...`;
-      }
-
-      return pickFromPool(category);
-    }
-
-    function pickFromPool(category) {
-      const pool = SNAKE_SYSTEM_DIALOGUE[category];
-      if (!pool || pool.length === 0) return '...';
-
-      let line;
-      let attempts = 0;
-      do {
-        line = pool[Math.floor(Math.random() * pool.length)];
-        attempts++;
-      } while (line === snakeSystemLastLine && attempts < 6 && pool.length > 1);
-
-      snakeSystemLastLine = line;
-      return line;
+    /**
+     * Countdown numbers themselves ARE the message most of the time (per
+     * spec example: "10...","9...","8..." etc.), with an occasional flavor
+     * line mixed in at specific points, and a distinct final beat at 1.
+     */
+    function pickSnakeCountdownLine(remaining) {
+      if (remaining === 7) return Dialogue.pick(SNAKE_SYSTEM_DIALOGUE.countdownHigh, 'snake.countdownHigh');
+      if (remaining === 4) return Dialogue.pick(SNAKE_SYSTEM_DIALOGUE.countdownLow, 'snake.countdownLow');
+      if (remaining === 1) return "💀";
+      return `${remaining}...`;
     }
 
     function setSnakeSystemMessage(line) {

@@ -6,24 +6,6 @@
     function getCounterMove(move) { return LOSE_TO[move]; }
     function getBeatenByMove(move) { return WIN_AGAINST[move]; }
 
-    const LEVEL_0_PROMPTS = [
-      "Make your choice.", "Choose your move.", "Rock, Paper, or Scissors?",
-      "Your move.", "Pick one.", "What will you choose?", "Choose wisely."
-    ];
-
-    const LEVEL_0_HINT_REACTIONS = [
-      "Two rounds and you still haven't won? Fine. Here's a hint.",
-      "Still struggling? I'll help you this time.",
-      "Two chances. Zero wins. You need a little help?",
-      "Alright, alright... I'll give you a hint.",
-      "You had two chances. Let's make this easier.",
-      "Okay, you clearly need some assistance."
-    ];
-
-    const WIN_REACTIONS = ["You actually won?", "Don't get too excited.", "Enjoy your little victory.", "Was that intentional?"];
-    const LOSS_REACTIONS = ["That was almost too easy.", "Predictable.", "I saw that coming from a mile away."];
-    const DRAW_REACTIONS = ["We're going nowhere.", "Still tied?", "Neither of us wanted to win, apparently."];
-
     let rpsGameState = {
       level: 0,
       totalRounds: 1,
@@ -36,10 +18,11 @@
       currentReaction: null,
       isRoundResolved: false,
       recentlyUsedHintKeys: [],
-      recentlyUsedReactions: [],
       justLeveledUp: false,
       lastRoundResult: null,
-      level0FailedAttempts: 0
+      level0FailedAttempts: 0,
+      consecutiveWins: 0,
+      consecutiveLosses: 0
     };
 
     function startRPSGame() {
@@ -47,8 +30,9 @@
       rpsGameState = {
         level: 0, totalRounds: 1, playerScore: 0, aiScore: 0, history: [],
         currentAiMove: null, currentStatement: '', currentExplanation: '', currentReaction: null,
-        isRoundResolved: false, recentlyUsedHintKeys: [], recentlyUsedReactions: [],
-        justLeveledUp: false, lastRoundResult: null, level0FailedAttempts: 0
+        isRoundResolved: false, recentlyUsedHintKeys: [],
+        justLeveledUp: false, lastRoundResult: null, level0FailedAttempts: 0,
+        consecutiveWins: 0, consecutiveLosses: 0
       };
       showView('rpsView');
       setupRound();
@@ -88,23 +72,47 @@
       updateRpsUI();
     }
 
+    /**
+     * Decides which dialogue pool applies to the upcoming round, following
+     * Game State -> Behavior Detection -> Dialogue Category -> Dialogue.pick()
+     * (spec section 4). rps.js only ever decides WHAT happened; the actual
+     * lines live in RPS_DIALOGUE (js/dialogue/rps-dialogue.js).
+     */
     function generateAiYapping() {
-      function pickUnique(pool) {
-        let filtered = pool.filter(line => !rpsGameState.recentlyUsedReactions.includes(line));
-        if (filtered.length === 0) filtered = pool;
-        const chosen = filtered[Math.floor(Math.random() * filtered.length)];
-        rpsGameState.recentlyUsedReactions.push(chosen);
-        if (rpsGameState.recentlyUsedReactions.length > 8) rpsGameState.recentlyUsedReactions.shift();
-        return chosen;
-      }
-
       if (rpsGameState.level === 0 && rpsGameState.level0FailedAttempts >= 2) {
-        return pickUnique(LEVEL_0_HINT_REACTIONS);
+        return Dialogue.pick(RPS_DIALOGUE.level0HintReactions, 'rps.level0Hint');
       }
 
-      if (rpsGameState.lastRoundResult === 'win') return pickUnique(WIN_REACTIONS);
-      if (rpsGameState.lastRoundResult === 'lose') return pickUnique(LOSS_REACTIONS);
-      if (rpsGameState.lastRoundResult === 'draw') return pickUnique(DRAW_REACTIONS);
+      // Streaks take priority over a single round's result, since they're
+      // a stronger, more "the AI is watching you" signal.
+      if (rpsGameState.consecutiveWins >= 3) {
+        return Dialogue.pick(RPS_DIALOGUE.playerWinStreak, 'rps.winStreak');
+      }
+      if (rpsGameState.consecutiveLosses >= 3) {
+        return Dialogue.pick(RPS_DIALOGUE.playerLossStreak, 'rps.lossStreak');
+      }
+
+      // Behavioral: has the player repeated the same move several times?
+      const repeatedMove = detectRpsRepeatedMove();
+      if (repeatedMove && Math.random() < 0.5) {
+        const pool = repeatedMove === 'rock' ? RPS_DIALOGUE.repeatedRock
+          : repeatedMove === 'paper' ? RPS_DIALOGUE.repeatedPaper
+          : RPS_DIALOGUE.repeatedScissors;
+        return Dialogue.pick(pool, 'rps.repeatedMove.' + repeatedMove);
+      }
+
+      if (rpsGameState.lastRoundResult === 'win') return Dialogue.pick(RPS_DIALOGUE.winReactions, 'rps.win');
+      if (rpsGameState.lastRoundResult === 'lose') return Dialogue.pick(RPS_DIALOGUE.lossReactions, 'rps.lose');
+      if (rpsGameState.lastRoundResult === 'draw') return Dialogue.pick(RPS_DIALOGUE.drawReactions, 'rps.draw');
+      return null;
+    }
+
+    /** Returns the move name if the player's last 3 choices were identical, otherwise null. */
+    function detectRpsRepeatedMove() {
+      const hLen = rpsGameState.history.length;
+      if (hLen < 3) return null;
+      const last3 = rpsGameState.history.slice(-3).map(h => h.playerMove);
+      if (last3[0] === last3[1] && last3[1] === last3[2]) return last3[0];
       return null;
     }
 
@@ -114,7 +122,7 @@
 
       if (isLevel0NoHint) {
         const randomMove = MOVES[Math.floor(Math.random() * MOVES.length)];
-        const prompt = LEVEL_0_PROMPTS[Math.floor(Math.random() * LEVEL_0_PROMPTS.length)];
+        const prompt = Dialogue.pick(RPS_DIALOGUE.level0Prompts, 'rps.level0Prompt');
         return { move: randomMove, statement: `"${prompt}"`, explanation: 'Level 0 Baseline: Pure strategy test.', hintKey: 'L0' };
       }
 
@@ -169,6 +177,9 @@
       if (playerMove === aiMove) result = 'draw';
       else if (WIN_AGAINST[playerMove] === aiMove) { result = 'win'; rpsGameState.playerScore++; }
       else { result = 'lose'; rpsGameState.aiScore++; }
+
+      rpsGameState.consecutiveWins = (result === 'win') ? rpsGameState.consecutiveWins + 1 : 0;
+      rpsGameState.consecutiveLosses = (result === 'lose') ? rpsGameState.consecutiveLosses + 1 : 0;
 
       rpsGameState.history.push({
         round: rpsGameState.totalRounds, playerMove, aiMove, result

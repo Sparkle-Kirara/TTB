@@ -11,7 +11,6 @@
       attemptsLeft: 7,
       maxAttempts: 7,
       guesses: [],             // { value, result: 'higher'|'lower'|'correct' }
-      lastLineByCategory: {},  // avoid repeating the same line back-to-back
       consecutiveEfficientWins: 0 // simple session-only "AI getting impressed" tracker
     };
 
@@ -97,7 +96,7 @@
       TTBAudio.playStart();
       ttmState.status = 'PLAYING';
       showTtmOverlay('NONE');
-      setTtmDialogue(pickTtmLine('OPENING'));
+      setTtmDialogue(Dialogue.pick(GAME5_DIALOGUE.opening, 'ttm.opening'));
       focusTtmInput();
     }
 
@@ -108,7 +107,7 @@
       setupTtmRound();
       ttmState.status = 'PLAYING';
       showTtmOverlay('NONE');
-      setTtmDialogue(pickTtmLine('OPENING'));
+      setTtmDialogue(Dialogue.pick(GAME5_DIALOGUE.opening, 'ttm.opening'));
       focusTtmInput();
     }
 
@@ -118,7 +117,7 @@
       setupTtmRound();
       ttmState.status = 'PLAYING';
       showTtmOverlay('NONE');
-      setTtmDialogue(pickTtmLine('OPENING'));
+      setTtmDialogue(Dialogue.pick(GAME5_DIALOGUE.opening, 'ttm.opening'));
       focusTtmInput();
     }
 
@@ -238,7 +237,7 @@
       document.getElementById('ttmLoseNumber').innerText = ttmState.secret;
       document.getElementById('ttmLoseBest').innerText = ttmState.bestLevel;
 
-      setTtmDialogue(pickTtmLine('LOSS'));
+      setTtmDialogue(Dialogue.pick(GAME5_DIALOGUE.loss, 'ttm.loss'));
       showTtmOverlay('LOSE');
       updateTtmScoresUI();
     }
@@ -311,123 +310,24 @@
       return 'FAR';
     }
 
-    /* --- 5.7 AI DIALOGUE POOLS --- */
-    const TTM_DIALOGUE = {
-      OPENING: [
-        "Let's see what you've got.",
-        "Pick a number.",
-        "Go ahead. Surprise me.",
-        "This should be interesting.",
-        "Your move.",
-        "Try not to embarrass yourself."
-      ],
-      FAR: [
-        "That wasn't even close.",
-        "Were you guessing or just clicking?",
-        "Bold strategy.",
-        "You're going to need a better idea than that."
-      ],
-      CLOSE: [
-        "Getting warmer.",
-        "Okay, you're getting somewhere.",
-        "Not bad."
-      ],
-      VERY_CLOSE: [
-        "Okay... that was actually good.",
-        "Now you're getting it.",
-        "One away. Don't mess this up."
-      ],
-      RANDOM: [
-        "Do you have a strategy?",
-        "Because I can't find it.",
-        "Are you guessing or exploring?",
-        "Interesting approach. Very... chaotic."
-      ],
-      SAME_DIRECTION: [
-        "You really like going that way, huh?",
-        "You're committed to that direction, huh?",
-        "Maybe try thinking instead of marching."
-      ],
-      TINY_STEPS: [
-        "One number at a time?",
-        "You're taking the scenic route.",
-        "You know you can make bigger moves, right?"
-      ],
-      BINARY_SEARCH: [
-        "Okay... you're actually using logic.",
-        "That's a pretty good strategy.",
-        "Now we're playing seriously.",
-        "You're narrowing that range fast."
-      ],
-      STRATEGY_SHIFT: [
-        "Oh? New strategy?",
-        "Finally figured something out?",
-        "Changing tactics now?"
-      ],
-      IMPRESSED: [
-        "Okay, you're good.",
-        "I'll admit it. That was smart.",
-        "That was actually impressive.",
-        "You're getting annoyingly good at this.",
-        "Okay... respect.",
-        "Maybe I underestimated you."
-      ],
-      WIN_SLOW: [
-        "Eventually.",
-        "You got it.",
-        "Finally."
-      ],
-      WIN_AVERAGE: [
-        "Not bad.",
-        "Okay, I'll give you that one.",
-        "That was actually pretty good."
-      ],
-      WIN_EFFICIENT: [
-        "Okay, that was good.",
-        "Alright, I'm impressed.",
-        "You're narrowing that range fast."
-      ],
-      WIN_FIRST_TRY: [
-        "First try?!",
-        "...Seriously?",
-        "Okay, I wasn't expecting that."
-      ],
-      WIN_STREAK: [
-        "Okay, that wasn't luck.",
-        "Alright, stop showing off.",
-        "You're getting annoyingly good at this."
-      ],
-      LOSS: [
-        "Out of guesses.",
-        "You were getting there. Sort of.",
-        "Close enough... except it wasn't.",
-        "You almost had it.",
-        "Maybe next time."
-      ]
+    /* --- 5.7 AI DIALOGUE --- */
+    // Content lives in js/dialogue/game5-dialogue.js (GAME5_DIALOGUE).
+    // Selection goes through the shared Dialogue utility. This section only
+    // decides WHICH pool applies to the current moment.
+
+    // Maps detectTtmBehaviorPattern()'s categories to GAME5_DIALOGUE pool
+    // names, since the detector predates the shared dialogue file's naming.
+    const TTM_PATTERN_TO_POOL = {
+      RANDOM: 'random',
+      SAME_DIRECTION: 'sameDirection',
+      TINY_STEPS: 'tinySteps',
+      BINARY_SEARCH: 'binarySearch',
+      STRATEGY_SHIFT: 'strategyShift'
     };
-
-    // Picks a random line from a category while avoiding an immediate repeat
-    // of the last line used in that same category (spec section 14).
-    function pickTtmLine(category) {
-      const pool = TTM_DIALOGUE[category];
-      if (!pool || pool.length === 0) return '...';
-      if (pool.length === 1) return pool[0];
-
-      const lastLine = ttmState.lastLineByCategory[category];
-      let choice;
-      let attempts = 0;
-      do {
-        choice = pool[Math.floor(Math.random() * pool.length)];
-        attempts++;
-      } while (choice === lastLine && attempts < 8);
-
-      ttmState.lastLineByCategory[category] = choice;
-      return choice;
-    }
 
     // Decides which dialogue category applies to the guess just made,
     // following the priority order from spec section 13:
-    //   game state -> behavior detection -> dialogue category -> random line
+    //   game state -> behavior detection -> dialogue category -> Dialogue.pick()
     // Behavior patterns take priority over plain closeness commentary so the
     // AI reads as reacting to HOW the player plays, not just each guess in
     // isolation — but closeness still gets a turn most of the time so the
@@ -440,29 +340,32 @@
       // A very close guess with an efficient round so far can trigger an
       // earned "impressed" line instead of the usual closeness remark.
       if (closeness === 'VERY_CLOSE' && ttmState.guesses.length <= Math.ceil(ttmState.maxAttempts * 0.6)) {
-        if (Math.random() < 0.4) return pickTtmLine('IMPRESSED');
+        if (Math.random() < 0.4) return Dialogue.pick(GAME5_DIALOGUE.impressed, 'ttm.impressed');
       }
 
       // Otherwise, alternate between behavior commentary and closeness
       // commentary so neither dominates every single turn.
       if (pattern && Math.random() < 0.55) {
-        return pickTtmLine(pattern);
+        const poolName = TTM_PATTERN_TO_POOL[pattern];
+        return Dialogue.pick(GAME5_DIALOGUE[poolName], 'ttm.' + poolName);
       }
 
-      return pickTtmLine(closeness === 'VERY_CLOSE' ? 'VERY_CLOSE' : (closeness === 'CLOSE' ? 'CLOSE' : 'FAR'));
+      if (closeness === 'VERY_CLOSE') return Dialogue.pick(GAME5_DIALOGUE.veryClose, 'ttm.veryClose');
+      if (closeness === 'CLOSE') return Dialogue.pick(GAME5_DIALOGUE.close, 'ttm.close');
+      return Dialogue.pick(GAME5_DIALOGUE.far, 'ttm.far');
     }
 
     function pickTtmWinLine(guessCount) {
-      if (guessCount === 1) return pickTtmLine('WIN_FIRST_TRY');
+      if (guessCount === 1) return Dialogue.pick(GAME5_DIALOGUE.winFirstTry, 'ttm.winFirstTry');
 
       // Reward genuine repeated strong performance (spec section 12) before
       // falling back to a single-round performance tier.
-      if (ttmState.consecutiveEfficientWins >= 2) return pickTtmLine('WIN_STREAK');
+      if (ttmState.consecutiveEfficientWins >= 2) return Dialogue.pick(GAME5_DIALOGUE.winStreak, 'ttm.winStreak');
 
       const efficiencyRatio = guessCount / ttmState.maxAttempts;
-      if (efficiencyRatio <= 0.4) return pickTtmLine('WIN_EFFICIENT');
-      if (efficiencyRatio <= 0.7) return pickTtmLine('WIN_AVERAGE');
-      return pickTtmLine('WIN_SLOW');
+      if (efficiencyRatio <= 0.4) return Dialogue.pick(GAME5_DIALOGUE.winEfficient, 'ttm.winEfficient');
+      if (efficiencyRatio <= 0.7) return Dialogue.pick(GAME5_DIALOGUE.winAverage, 'ttm.winAverage');
+      return Dialogue.pick(GAME5_DIALOGUE.winSlow, 'ttm.winSlow');
     }
 
     /* --- 5.8 INPUT HANDLING --- */

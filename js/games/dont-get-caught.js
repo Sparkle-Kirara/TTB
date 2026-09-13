@@ -14,7 +14,14 @@
       bestLevel: 0,
       playerHistory: [], // Stores recent dx, dy vectors
       renderPlayer: { x: 0, y: 0 },
-      renderAi: { x: 0, y: 0 }
+      renderAi: { x: 0, y: 0 },
+      // --- Behavior tracking for dialogue only (spec PART 8) -- none of
+      // this affects the AI's chase logic, only what it says. ---
+      consecutiveWins: 0,
+      consecutiveLosses: 0,
+      consecutiveEscapes: 0,   // successful escapes from a near-miss, this run
+      hadNearMissThisLevel: false,
+      wasEverAdjacentThisLevel: false
     };
 
     let dgcCanvas, dgcCtx;
@@ -26,6 +33,8 @@
       initDgcCanvas();
       loadDgcHighScore();
       dgcState.level = 0;
+      dgcState.consecutiveWins = 0;
+      dgcState.consecutiveLosses = 0;
       generateDgcLevel(0);
       showDgcOverlay('READY');
     }
@@ -89,6 +98,9 @@
       dgcState.gridSize = config.size;
       dgcState.turns = 0;
       dgcState.playerHistory = [];
+      dgcState.hadNearMissThisLevel = false;
+      dgcState.wasEverAdjacentThisLevel = false;
+      dgcState.consecutiveEscapes = 0;
 
       let validMapFound = false;
       let attempts = 0;
@@ -249,6 +261,10 @@
         return;
       }
 
+      const wasFirstMoveThisLevel = (dgcState.turns === 0);
+      const distBeforeMove = Math.abs(dgcState.player.x - dgcState.ai.x) + Math.abs(dgcState.player.y - dgcState.ai.y);
+      const goalDistBefore = Math.abs(dgcState.player.x - dgcState.goal.x) + Math.abs(dgcState.player.y - dgcState.goal.y);
+
       // 2. PLAYER MOVES
       dgcState.player.x = newPx;
       dgcState.player.y = newPy;
@@ -258,6 +274,17 @@
       // Record Player Movement Vector
       dgcState.playerHistory.push({ dx, dy });
       if (dgcState.playerHistory.length > 4) dgcState.playerHistory.shift();
+
+      const goalDistAfter = Math.abs(dgcState.player.x - dgcState.goal.x) + Math.abs(dgcState.player.y - dgcState.goal.y);
+      const distAfterPlayerMove = Math.abs(dgcState.player.x - dgcState.ai.x) + Math.abs(dgcState.player.y - dgcState.ai.y);
+
+      // A "near miss" is the player having been directly adjacent to the AI
+      // (one step from being caught) at some point this level -- tracked so
+      // an eventual escape/goal can reference it.
+      if (distAfterPlayerMove === 1) {
+        dgcState.hadNearMissThisLevel = true;
+        dgcState.wasEverAdjacentThisLevel = true;
+      }
 
       // 3. CHECK GOAL REACHED
       if (dgcState.player.x === dgcState.goal.x && dgcState.player.y === dgcState.goal.y) {
@@ -280,7 +307,109 @@
         return;
       }
 
+      const distAfterAiMove = Math.abs(dgcState.player.x - dgcState.ai.x) + Math.abs(dgcState.player.y - dgcState.ai.y);
+
+      maybeSpeakDgcMoveEvent({
+        wasFirstMoveThisLevel,
+        goalDistBefore,
+        goalDistAfter,
+        distBeforeMove,
+        distAfterAiMove
+      });
+
       updateDgcScoresUI();
+    }
+
+    /**
+     * Decides whether to say anything after a normal (non-terminal) turn,
+     * and which pool to pick from if so. Kept deliberately low-frequency --
+     * per-turn commentary on every single move would be noisy, so most
+     * turns say nothing at all. Priority order roughly follows spec section
+     * 9's Reactive > Behavioral > Personality organization, biased toward
+     * the most specific/interesting signal available this turn.
+     */
+    function maybeSpeakDgcMoveEvent({ wasFirstMoveThisLevel, goalDistBefore, goalDistAfter, distBeforeMove, distAfterAiMove }) {
+      if (wasFirstMoveThisLevel) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerStartsMoving, 'dgc.startMoving'));
+        return;
+      }
+
+      // Near miss: AI is now adjacent to the player (one step from a catch).
+      if (distAfterAiMove === 1) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.nearMiss, 'dgc.nearMiss'));
+        return;
+      }
+
+      // Escape: the AI was adjacent last turn but the gap just widened --
+      // the player got away from an immediate-catch situation.
+      if (distBeforeMove === 1 && distAfterAiMove > 1) {
+        dgcState.consecutiveEscapes += 1;
+        if (dgcState.consecutiveEscapes >= 2) {
+          setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerEscapesRepeatedly, 'dgc.escapesRepeated'));
+        } else {
+          setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerEscapes, 'dgc.escapes'));
+        }
+        return;
+      }
+
+      // Sudden direction change vs. repeated movement -- checked from the
+      // player's recent history (spec PART 8).
+      const pattern = detectDgcMovementPattern();
+      if (pattern === 'REPEATED' && Math.random() < 0.4) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerRepeatsMovement, 'dgc.repeatsMovement'));
+        return;
+      }
+      if (pattern === 'SUDDEN_CHANGE' && Math.random() < 0.4) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerSuddenDirectionChange, 'dgc.suddenChange'));
+        return;
+      }
+
+      // AI closing in, vs. player making progress toward the goal -- lower
+      // priority flavor commentary, said only occasionally.
+      if (distAfterAiMove <= 2 && Math.random() < 0.25) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.aiGetsClose, 'dgc.aiClose'));
+        return;
+      }
+      if (goalDistAfter < goalDistBefore && Math.random() < 0.15) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerMovesTowardGoal, 'dgc.towardGoal'));
+        return;
+      }
+      if (goalDistAfter > goalDistBefore && Math.random() < 0.15) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerMovesAwayFromGoal, 'dgc.awayGoal'));
+        return;
+      }
+
+      // Long survival: an occasional check-in if the level has gone on a while.
+      if (dgcState.turns > 20 && Math.random() < 0.1) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerSurvivesLong, 'dgc.survivesLong'));
+      }
+    }
+
+    /** Looks at the last 3-4 recorded movement vectors for a simple repeated-direction or sudden-change signal. */
+    function detectDgcMovementPattern() {
+      const h = dgcState.playerHistory;
+      if (h.length < 3) return null;
+
+      const last3 = h.slice(-3);
+      const allSame = last3.every(v => v.dx === last3[0].dx && v.dy === last3[0].dy);
+      if (allSame) return 'REPEATED';
+
+      if (h.length >= 4) {
+        const older = h[h.length - 4];
+        const newest = h[h.length - 1];
+        const wasConsistent = h.slice(-4, -1).every(v => v.dx === older.dx && v.dy === older.dy);
+        const reversed = (newest.dx === -older.dx && newest.dy === -older.dy);
+        if (wasConsistent && reversed) return 'SUDDEN_CHANGE';
+      }
+
+      return null;
+    }
+
+    function setDgcDialogue(line) {
+      const el = document.getElementById('dgcDialogue');
+      if (!el) return;
+      el.style.display = 'block';
+      el.innerText = `"${line}"`;
     }
 
     // Builds a direction-priority list for BFS so the first move found among
@@ -434,8 +563,28 @@
       dgcState.status = 'LEVEL_COMPLETE';
       saveDgcHighScore();
 
+      const turnsThisLevel = dgcState.turns;
+
       document.getElementById('dgcCompletedLevel').innerText = dgcState.level;
       document.getElementById('dgcLevelTurns').innerText = dgcState.turns;
+
+      dgcState.consecutiveWins += 1;
+      dgcState.consecutiveLosses = 0;
+      dgcState.consecutiveEscapes = 0;
+
+      // Priority: streak > notable pace (fast/slow) > plain goal-reached
+      // reaction. A "fast" completion is judged relative to the shortest
+      // possible distance for this level (gridSize is a reasonable proxy
+      // since exact shortest-path isn't tracked for dialogue purposes).
+      if (dgcState.consecutiveWins >= 3) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerWinStreak, 'dgc.winStreak'));
+      } else if (turnsThisLevel <= dgcState.gridSize) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerReachesGoalFast, 'dgc.goalFast'));
+      } else if (turnsThisLevel >= dgcState.gridSize * 3) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerReachesGoalSlow, 'dgc.goalSlow'));
+      } else {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerReachesGoal, 'dgc.goal'));
+      }
 
       showDgcOverlay('LEVEL_COMPLETE');
       updateDgcScoresUI();
@@ -447,6 +596,16 @@
 
       document.getElementById('dgcFailedLevel').innerText = dgcState.level;
       document.getElementById('dgcFinalBest').innerText = dgcState.bestLevel;
+
+      dgcState.consecutiveLosses += 1;
+      dgcState.consecutiveWins = 0;
+      dgcState.consecutiveEscapes = 0;
+
+      if (dgcState.consecutiveLosses >= 3) {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.playerLossStreak, 'dgc.lossStreak'));
+      } else {
+        setDgcDialogue(Dialogue.pick(GAME4_DIALOGUE.aiCatchesPlayer, 'dgc.catches'));
+      }
 
       showDgcOverlay('GAME_OVER');
       updateDgcScoresUI();
