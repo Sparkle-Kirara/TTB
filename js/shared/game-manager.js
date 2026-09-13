@@ -39,6 +39,13 @@
       } else if (viewId === 'runnerView') {
         currentActiveGame = 'runner';
         startRunnerLoop();
+      } else if (viewId === 'physicsView') {
+        currentActiveGame = 'physics';
+        startPhysicsLoop();
+      } else if (viewId === 'aimView') {
+        currentActiveGame = 'aim';
+      } else if (viewId === 'aimDuelView') {
+        currentActiveGame = 'aimDuel';
       } else {
         currentActiveGame = null;
       }
@@ -56,6 +63,9 @@
       else if (currentActiveGame === 'hotOrNot') startHotOrNotRun();
       else if (currentActiveGame === 'reflex') startReflexRun();
       else if (currentActiveGame === 'runner') runnerStartRun();
+      else if (currentActiveGame === 'physics') physicsStartRun();
+      else if (currentActiveGame === 'aim') aimStartRun();
+      else if (currentActiveGame === 'aimDuel') aimDuelStartRun();
     }
 
     function stopAllAnimationLoops() {
@@ -74,6 +84,22 @@
       if (typeof runnerAnimationId !== 'undefined' && runnerAnimationId) {
         cancelAnimationFrame(runnerAnimationId);
         runnerAnimationId = null;
+      }
+      if (typeof physicsAnimationId !== 'undefined' && physicsAnimationId) {
+        cancelAnimationFrame(physicsAnimationId);
+        physicsAnimationId = null;
+      }
+      if (typeof aimAnimationId !== 'undefined' && aimAnimationId) {
+        cancelAnimationFrame(aimAnimationId);
+        aimAnimationId = null;
+      }
+      if (typeof aimDuelAnimationId !== 'undefined' && aimDuelAnimationId) {
+        cancelAnimationFrame(aimDuelAnimationId);
+        aimDuelAnimationId = null;
+      }
+      if (typeof aimDuelDecisionIntervalId !== 'undefined' && aimDuelDecisionIntervalId) {
+        clearInterval(aimDuelDecisionIntervalId);
+        aimDuelDecisionIntervalId = null;
       }
     }
 
