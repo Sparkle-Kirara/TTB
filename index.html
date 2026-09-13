@@ -221,6 +221,58 @@
             </div>
           </div>
         </article>
+
+        <!-- Game 11: Don't Drop It -->
+        <article class="game-card" onclick="startPhysicsGame()">
+          <div class="card-thumb thumb-physics">
+            <span class="card-tag">⚪ Physics / Adaptive AI</span>
+            <div class="thumb-icons">
+              <span>⚪</span><span>🟩</span><span>🕳️</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Don't Drop It</h2>
+            <p class="card-hook">«One more try. You almost had it.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Endless • Best Distance</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+        <!-- Game 12: Outsmart the Target -->
+        <article class="game-card" onclick="startAimGame()">
+          <div class="card-thumb thumb-aim">
+            <span class="card-tag">🎯 Arcade / Adaptive AI</span>
+            <div class="thumb-icons">
+              <span>🎯</span><span>💥</span><span>🧠</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Outsmart the Target</h2>
+            <p class="card-hook">«It's learning how you aim.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Arcade • Best Score</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
+        <!-- Game 12 special level: Neural Duel -->
+        <article class="game-card" onclick="startAimDuelGame()">
+          <div class="card-thumb thumb-aim-duel">
+            <span class="card-tag">🧠 Experimental / Neural Network</span>
+            <div class="thumb-icons">
+              <span>🎯</span><span>🧠</span><span>↔️</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Neural Duel</h2>
+            <p class="card-hook">«It's trying to predict your next click.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Special Level • Learns Live</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -801,6 +853,218 @@
       </div>
     </section>
 
+    <!-- VIEW 12: DON'T DROP IT (Game #11) -->
+    <section id="physicsView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="physicsBestReady">Best: 0m</div>
+        <div class="scores-display">
+          <div class="score-item">Distance: <span id="physicsDistance">0</span>m</div>
+        </div>
+      </div>
+
+      <div class="ai-box" id="physicsAiBox" style="display:none;">
+        <div class="ai-avatar-tag">
+          <span>👁️ ???</span>
+        </div>
+        <div class="statement-text" id="physicsAiText">
+          "..."
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="physicsBoardContainer" style="aspect-ratio: 3 / 4; max-width: 380px;">
+        <canvas id="physicsCanvas"></canvas>
+
+        <div class="snake-overlay" id="physicsOverlayReady">
+          <div class="snake-overlay-title">DON'T DROP IT</div>
+          <div class="snake-overlay-subtitle">Keep it bouncing. Don't fall.</div>
+          <button class="action-btn-lg" onclick="physicsStartRun()">BEGIN</button>
+        </div>
+
+        <div class="snake-overlay" id="physicsOverlayEnding" style="display:none;">
+          <div class="snake-overlay-title" style="color:var(--accent-lose);">GAME OVER</div>
+          <div class="statement-text" id="physicsEndingText" style="margin: 0.5rem 0; white-space: pre-line;">"..."</div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="physicsFinalDistance">0</span>
+              <span class="lbl">Distance (m)</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" style="color:#a5b4fc;" id="physicsFinalBest">0</span>
+              <span class="lbl">Best (m)</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.6rem; margin-top:0.4rem;">
+            <button class="action-btn-lg" onclick="physicsStartRun()">Play Again</button>
+            <button class="btn-sm" onclick="showView('hubView')">Back to Hub</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 <b>Desktop:</b> Arrow keys / A-D &bull; <b>Mobile:</b> Hold left/right side of the board
+      </div>
+    </section>
+
+    <!-- VIEW 13: OUTSMART THE TARGET (Game #12) -->
+    <section id="aimView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="aimBestReady">Best: 0</div>
+        <div class="scores-display">
+          <div class="score-item">Score: <span id="aimScore">0</span></div>
+          <div class="score-item">Combo: <span id="aimCombo">—</span></div>
+          <div class="score-item">Acc: <span id="aimAccuracy">—</span></div>
+        </div>
+      </div>
+
+      <div class="ai-box" id="aimAiBox" style="display:none;">
+        <div class="ai-avatar-tag">
+          <span>🎯 ???</span>
+        </div>
+        <div class="statement-text" id="aimAiText">
+          "..."
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="aimBoardContainer" style="aspect-ratio: 3 / 4; max-width: 380px;">
+        <canvas id="aimCanvas"></canvas>
+
+        <div class="snake-overlay" id="aimOverlayReady">
+          <div class="snake-overlay-title">OUTSMART THE TARGET</div>
+          <div class="snake-overlay-subtitle">Aim, shoot, and break your own habits before it learns them.</div>
+          <button class="action-btn-lg" onclick="aimStartRun()">BEGIN</button>
+        </div>
+
+        <div class="snake-overlay" id="aimOverlayEnding" style="display:none;">
+          <div class="snake-overlay-title" style="color:var(--accent-lose);">GAME OVER</div>
+          <div class="statement-text" id="aimEndingText" style="margin: 0.5rem 0; white-space: pre-line;">"..."</div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="aimFinalScore">0</span>
+              <span class="lbl">Score</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" id="aimFinalAccuracy">0%</span>
+              <span class="lbl">Accuracy</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" style="color:#a5b4fc;" id="aimFinalBest">0</span>
+              <span class="lbl">Best</span>
+            </div>
+          </div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="aimFinalHits">0</span>
+              <span class="lbl">Hits</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" id="aimFinalMisses">0</span>
+              <span class="lbl">Misses</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" id="aimFinalCombo">0</span>
+              <span class="lbl">Best Combo</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" id="aimFinalPrecision">0%</span>
+              <span class="lbl">Avg Precision</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.6rem; margin-top:0.4rem;">
+            <button class="action-btn-lg" onclick="aimStartRun()">Play Again</button>
+            <button class="btn-sm" onclick="showView('hubView')">Back to Hub</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 <b>Desktop:</b> Move mouse to aim, click to shoot &bull; <b>Mobile:</b> Drag to aim, tap to shoot
+        &bull; <span style="cursor:pointer; text-decoration:underline;" onclick="toggleAimAiDebugPanel()">⚙ AI Debug</span>
+      </div>
+
+      <div id="aimAiDebugPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center;">
+        <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.2rem; width:90%; max-width:320px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+            <strong>AI DEBUG</strong>
+            <span style="cursor:pointer; color:var(--text-muted);" onclick="toggleAimAiDebugPanel()">✕</span>
+          </div>
+          <pre id="aimAiDebugText" style="font-size:0.78rem; color:var(--text-muted); line-height:1.7; white-space:pre-wrap; font-family:inherit; margin:0;">No data yet.</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 14: NEURAL DUEL (Game #12 special level) -->
+    <section id="aimDuelView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill">Neural Duel</div>
+        <div class="scores-display">
+          <div class="score-item">Round: <span id="aimDuelRound">0 / 8</span></div>
+          <div class="score-item">Evasions: <span id="aimDuelEvasions">0</span></div>
+          <div class="score-item">Hits: <span id="aimDuelHits">0</span></div>
+        </div>
+      </div>
+
+      <div class="ai-box" id="aimDuelAiBox" style="display:none;">
+        <div class="ai-avatar-tag">
+          <span>🧠 ???</span>
+        </div>
+        <div class="statement-text" id="aimDuelAiText">
+          "..."
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="aimDuelBoardContainer" style="aspect-ratio: 3 / 4; max-width: 380px;">
+        <canvas id="aimDuelCanvas"></canvas>
+
+        <div class="snake-overlay" id="aimDuelOverlayReady">
+          <div class="snake-overlay-title">NEURAL DUEL</div>
+          <div class="snake-overlay-subtitle">Try to click it. It's trying to predict where you'll click.</div>
+          <button class="action-btn-lg" onclick="aimDuelStartRun()">BEGIN</button>
+        </div>
+
+        <div class="snake-overlay" id="aimDuelOverlayEnding" style="display:none;">
+          <div class="snake-overlay-title" style="color:var(--accent-win);">ROUND COMPLETE</div>
+          <div class="statement-text" id="aimDuelEndingText" style="margin: 0.5rem 0; white-space: pre-line;">"..."</div>
+          <div class="snake-score-summary">
+            <div class="snake-score-stat">
+              <span class="val" id="aimDuelFinalHits">0</span>
+              <span class="lbl">AI Hit</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" id="aimDuelFinalEvasions">0</span>
+              <span class="lbl">Evasions</span>
+            </div>
+            <div class="snake-score-stat">
+              <span class="val" style="color:#a5b4fc;" id="aimDuelFinalReward">0</span>
+              <span class="lbl">Avg Reward</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.6rem; margin-top:0.4rem;">
+            <button class="action-btn-lg" onclick="aimDuelStartRun()">Play Again</button>
+            <button class="btn-sm" onclick="showView('hubView')">Back to Hub</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 <b>Desktop:</b> Move mouse to aim, click to shoot &bull; <b>Mobile:</b> Drag to aim, tap to shoot
+        &bull; <span style="cursor:pointer; text-decoration:underline;" onclick="toggleAimDuelDebugPanel()">⚙ Neural Debug</span>
+        &bull; <span style="cursor:pointer; text-decoration:underline; color:var(--accent-lose);" onclick="resetAimDuelNeuralNetwork()">Reset AI</span>
+      </div>
+
+      <div id="aimDuelDebugPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center;">
+        <div style="background:var(--surface-card); border:1px solid var(--border); border-radius:var(--radius); padding:1.2rem; width:90%; max-width:320px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+            <strong>NEURAL DUEL DEBUG</strong>
+            <span style="cursor:pointer; color:var(--text-muted);" onclick="toggleAimDuelDebugPanel()">✕</span>
+          </div>
+          <pre id="aimDuelDebugText" style="font-size:0.78rem; color:var(--text-muted); line-height:1.7; white-space:pre-wrap; font-family:inherit; margin:0;">No data yet.</pre>
+          <div style="margin-top:0.8rem; display:flex; gap:0.5rem;">
+            <button class="btn-sm" onclick="resetAimDuelNeuralNetwork()">Reset Neural AI</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <footer>
       <p>TTB Platform • Tiny Games, Big Brains</p>
     </footer>
@@ -825,12 +1089,15 @@
   <script src="js/dialogue/game8-dialogue.js"></script>
   <script src="js/dialogue/reflex-dialogue.js"></script>
   <script src="js/dialogue/runner-dialogue.js"></script>
+  <script src="js/dialogue/physics-dialogue.js"></script>
+  <script src="js/dialogue/aim-dialogue.js"></script>
 
   <!-- Generic AI modules (Snake depends on these; no other game does) -->
   <script src="js/ai/neural-network.js"></script>
   <script src="js/ai/snake-ai.js"></script>
   <script src="js/ai/neuroevolution.js"></script>
   <script src="js/ai/ai-storage.js"></script>
+  <script src="js/ai/aim-neural.js"></script>
 
   <!-- Game modules (no cross-game dependencies; order between them is not significant) -->
   <script src="js/games/rps.js"></script>
@@ -843,6 +1110,8 @@
   <script src="js/games/hot-or-not.js"></script>
   <script src="js/games/reflex.js"></script>
   <script src="js/games/runner.js"></script>
+  <script src="js/games/physics.js"></script>
+  <script src="js/games/aim.js"></script>
 
   <!-- Platform bootstrap last -->
   <script src="js/main.js"></script>
