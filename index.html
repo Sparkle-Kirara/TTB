@@ -273,6 +273,23 @@
             </div>
           </div>
         </article>
+        <!-- Game 13: Fishing -->
+        <article class="game-card" onclick="startFishingGame()">
+          <div class="card-thumb thumb-fishing">
+            <span class="card-tag">🎣 Arcade / Tension Control</span>
+            <div class="thumb-icons">
+              <span>🎣</span><span>🐟</span><span>〰️</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <h2 class="card-title">Fishing</h2>
+            <p class="card-hook">«Don't pull too hard. Don't let it get away.»</p>
+            <div class="card-footer">
+              <span style="font-size:0.78rem; color:var(--text-muted);">Arcade • Best Score</span>
+              <span class="play-btn">PLAY →</span>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -905,9 +922,10 @@
       </div>
     </section>
 
-    <!-- VIEW 13: OUTSMART THE TARGET (Game #12) -->
+    <!-- VIEW 13: OUTSMART THE TARGET (Game #12) — MODE: Classic -->
     <section id="aimView" class="view">
       <div class="game-header-bar">
+        <div class="badge-pill" title="Mode">Classic</div>
         <div class="badge-pill" id="aimBestReady">Best: 0</div>
         <div class="scores-display">
           <div class="score-item">Score: <span id="aimScore">0</span></div>
@@ -992,12 +1010,12 @@
       </div>
     </section>
 
-    <!-- VIEW 14: NEURAL DUEL (Game #12 special level) -->
+    <!-- VIEW 14: NEURAL DUEL (Game #12 special level) — MODE: Neural Duel -->
     <section id="aimDuelView" class="view">
       <div class="game-header-bar">
-        <div class="badge-pill">Neural Duel</div>
+        <div class="badge-pill" title="Mode">Neural Duel</div>
         <div class="scores-display">
-          <div class="score-item">Round: <span id="aimDuelRound">0 / 8</span></div>
+          <div class="score-item">Shots: <span id="aimDuelRound">0</span></div>
           <div class="score-item">Evasions: <span id="aimDuelEvasions">0</span></div>
           <div class="score-item">Hits: <span id="aimDuelHits">0</span></div>
         </div>
@@ -1017,12 +1035,12 @@
 
         <div class="snake-overlay" id="aimDuelOverlayReady">
           <div class="snake-overlay-title">NEURAL DUEL</div>
-          <div class="snake-overlay-subtitle">Try to click it. It's trying to predict where you'll click.</div>
+          <div class="snake-overlay-subtitle">Try to click it. It's trying to predict where you'll click. Keep playing — it keeps learning.</div>
           <button class="action-btn-lg" onclick="aimDuelStartRun()">BEGIN</button>
         </div>
 
         <div class="snake-overlay" id="aimDuelOverlayEnding" style="display:none;">
-          <div class="snake-overlay-title" style="color:var(--accent-win);">ROUND COMPLETE</div>
+          <div class="snake-overlay-title" style="color:var(--accent-win);">SESSION ENDED</div>
           <div class="statement-text" id="aimDuelEndingText" style="margin: 0.5rem 0; white-space: pre-line;">"..."</div>
           <div class="snake-score-summary">
             <div class="snake-score-stat">
@@ -1047,6 +1065,7 @@
 
       <div class="mobile-controls-hint">
         💡 <b>Desktop:</b> Move mouse to aim, click to shoot &bull; <b>Mobile:</b> Drag to aim, tap to shoot
+        &bull; <span style="cursor:pointer; text-decoration:underline;" onclick="aimDuelEndRun()">End Session</span>
         &bull; <span style="cursor:pointer; text-decoration:underline;" onclick="toggleAimDuelDebugPanel()">⚙ Neural Debug</span>
         &bull; <span style="cursor:pointer; text-decoration:underline; color:var(--accent-lose);" onclick="resetAimDuelNeuralNetwork()">Reset AI</span>
       </div>
@@ -1062,6 +1081,42 @@
             <button class="btn-sm" onclick="resetAimDuelNeuralNetwork()">Reset Neural AI</button>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- VIEW 15: FISHING (Game #13) -->
+    <section id="fishingView" class="view">
+      <div class="game-header-bar">
+        <div class="badge-pill" id="fishingBestReady">Best: 0</div>
+        <div class="scores-display">
+          <div class="score-item">Last Catch: <span id="fishingLastScore">—</span></div>
+        </div>
+      </div>
+
+      <div class="ai-box" id="fishingAiBox" style="display:none;">
+        <div class="ai-avatar-tag">
+          <span>🎣 ???</span>
+        </div>
+        <div class="statement-text" id="fishingAiText">
+          "..."
+        </div>
+      </div>
+
+      <div class="snake-board-wrapper" id="fishingBoardContainer" style="aspect-ratio: 3 / 4; max-width: 380px;">
+        <canvas id="fishingCanvas"></canvas>
+
+        <div style="position:absolute; top:10px; left:0; right:0; text-align:center; pointer-events:none;">
+          <div id="fishingStatusText" style="font-weight:700; font-size:1.1rem; color:var(--text); text-shadow:0 1px 4px rgba(0,0,0,0.6);"></div>
+          <div id="fishingCatchInfo" style="display:none; font-size:0.9rem; color:#4ade80; margin-top:0.2rem;"></div>
+        </div>
+
+        <div style="position:absolute; bottom:14px; left:0; right:0; display:flex; justify-content:center;">
+          <button class="action-btn-lg" id="fishingCastBtn" onclick="fishingStartCast()">CAST</button>
+        </div>
+      </div>
+
+      <div class="mobile-controls-hint">
+        💡 <b>Desktop:</b> Hold Space / click and hold to reel &bull; <b>Mobile:</b> Press and hold on the water to reel
       </div>
     </section>
 
@@ -1091,6 +1146,7 @@
   <script src="js/dialogue/runner-dialogue.js"></script>
   <script src="js/dialogue/physics-dialogue.js"></script>
   <script src="js/dialogue/aim-dialogue.js"></script>
+  <script src="js/dialogue/fishing-dialogue.js"></script>
 
   <!-- Generic AI modules (Snake depends on these; no other game does) -->
   <script src="js/ai/neural-network.js"></script>
@@ -1112,6 +1168,7 @@
   <script src="js/games/runner.js"></script>
   <script src="js/games/physics.js"></script>
   <script src="js/games/aim.js"></script>
+  <script src="js/games/fishing.js"></script>
 
   <!-- Platform bootstrap last -->
   <script src="js/main.js"></script>
