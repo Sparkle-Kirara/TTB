@@ -46,6 +46,8 @@
         currentActiveGame = 'aim';
       } else if (viewId === 'aimDuelView') {
         currentActiveGame = 'aimDuel';
+      } else if (viewId === 'fishingView') {
+        currentActiveGame = 'fishing';
       } else {
         currentActiveGame = null;
       }
@@ -66,6 +68,7 @@
       else if (currentActiveGame === 'physics') physicsStartRun();
       else if (currentActiveGame === 'aim') aimStartRun();
       else if (currentActiveGame === 'aimDuel') aimDuelStartRun();
+      else if (currentActiveGame === 'fishing') fishingStartRun();
     }
 
     function stopAllAnimationLoops() {
@@ -100,6 +103,10 @@
       if (typeof aimDuelDecisionIntervalId !== 'undefined' && aimDuelDecisionIntervalId) {
         clearInterval(aimDuelDecisionIntervalId);
         aimDuelDecisionIntervalId = null;
+      }
+      if (typeof fishingAnimationId !== 'undefined' && fishingAnimationId) {
+        cancelAnimationFrame(fishingAnimationId);
+        fishingAnimationId = null;
       }
     }
 
